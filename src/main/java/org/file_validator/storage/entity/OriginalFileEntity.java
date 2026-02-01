@@ -3,6 +3,7 @@ package org.file_validator.storage.entity;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.UUID;
 
 @Entity
@@ -100,5 +101,19 @@ public class OriginalFileEntity {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    @Override
+    public String toString() {
+        return "OriginalFileEntity{" +
+                "id=" + id +
+                ", logicalFileId=" + logicalFileId +
+                ", fileName='" + fileName + '\'' +
+                ", fileBlob=" + Arrays.toString(fileBlob) +
+                ", version=" + version +
+                ", status='" + status + '\'' +
+                ", uploadedBy='" + uploadedBy + '\'' +
+                ", createdAt=" + createdAt +
+                '}';
     }
 }

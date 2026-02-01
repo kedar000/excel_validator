@@ -5,9 +5,11 @@ import org.file_validator.storage.entity.OriginalFileEntity;
 import org.file_validator.storage.repository.OriginalFileRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -117,5 +119,43 @@ public class FileService {
                         file.getCreatedAt()
                 ))
                 .toList();
+    }
+
+    @Transactional
+    public void updateFile(UUID logicalFileId, MultipartFile newFile) throws Exception{
+        OriginalFileEntity latest = originalFileRepository
+                .findTopByLogicalFileIdOrderByVersionDesc(logicalFileId);
+        if(latest == null){
+            throw new RuntimeException("File not found for logicalFileId=" + logicalFileId);
+        }
+
+        //mark older version as SUPERSEDED
+        latest.setStatus("SUPERSEDED");
+        originalFileRepository.save(latest);
+
+        //new version
+        OriginalFileEntity updated = new OriginalFileEntity();
+        updated.setLogicalFileId(logicalFileId);
+        updated.setVersion(latest.getVersion() + 1);
+        updated.setStatus("ACTIVE");
+        updated.setFileBlob(newFile.getBytes());
+        updated.setFileName(newFile.getOriginalFilename());
+        updated.setUploadedBy("Intern-user");
+        updated.setCreatedAt(LocalDateTime.now());
+
+        originalFileRepository.save(updated);
+
+    }
+    
+    @Transactional(readOnly = true)
+    public OriginalFileEntity getFileByVersion(UUID logicalFileId , Integer version){
+        Optional<OriginalFileEntity> entity = Optional.ofNullable(originalFileRepository
+                .findByLogicalFileIdAndVersion(logicalFileId, version));
+        
+        if(entity == null || entity.isEmpty()){
+            throw new RuntimeException("File not found for logicalFileId=" + logicalFileId);
+        }
+
+        return entity.get();
     }
 }

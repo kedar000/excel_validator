@@ -52,6 +52,29 @@ public class FileController {
         return ResponseEntity.ok(fileService.getLastThreeVersion(logicalFileId));
     }
 
+    @PutMapping("/{logicalFileId}/update")
+    public ResponseEntity<String> updateFile(
+            @PathVariable("logicalFileId") UUID logicalFileId,
+            @RequestParam("file") MultipartFile file) throws Exception{
+        fileService.updateFile(logicalFileId, file);
+
+        return  ResponseEntity.ok("File updated");
+    }
+
+    @GetMapping("/{logicalFileId}/versions/{version}/download")
+    public ResponseEntity<byte[]>  downloadFile(
+            @PathVariable("logicalFileId") UUID logicalFileId,
+            @PathVariable("version") Integer version
+    ){
+        OriginalFileEntity file = fileService.getFileByVersion(logicalFileId , version);
+
+                return ResponseEntity.ok()
+                        .header("Content-Disposition",
+                                "attachment; filename=\"" + file.getFileName() + "\"")
+                        .header("Content-Type", "application/octet-stream")
+                        .body(file.getFileBlob());
+    }
+
 
 
 }
